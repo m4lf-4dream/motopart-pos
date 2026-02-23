@@ -1,96 +1,167 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
-
+import { Head, router, Link } from '@inertiajs/react';
 
 export default function Index({ products }) {
     const [cart, setCart] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [payAmount, setPayAmount] = useState(0);
+
+
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.brand.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const addToCart = (product) => {
+    const countInCart = cart.filter(item => item.name === product.name).length;
+    if (countInCart >= product.stock) {
+        alert(`Maaf, stok ${product.name} tidak mencukupi!`);
+        return;
+        }
 
-        setCart([...cart, { name: product.name, price: product.price }]);
+    setCart([...cart, { name: product.name, price: product.price }]);
     };
 
     const totalPrice = cart.reduce((acc, item) => acc + item.price, 0);
+    const returnAmount = payAmount - totalPrice;
+
+    const handleBayar = () => {
+        if (cart.length === 0) return alert("Keranjang kosong!");
+        if (payAmount < totalPrice) return alert("Uang pembayaran kurang!");
+
+        router.post('/sales', {
+            total_price: totalPrice,
+            pay_amount: payAmount,
+            return_amount: returnAmount,
+            items: cart
+        }, {
+            onSuccess: () => {
+                alert(`Transaksi Berhasil! Kembalian: Rp ${returnAmount.toLocaleString()}`);
+                setCart([]);
+                setPayAmount(0);
+            },
+        });
+    };
 
     return (
         <div className="p-10 min-h-screen font-sans" style={{ backgroundColor: "#F7F8F0", color: "#355872" }}>
             <Head title="MOTOPART - Kasir" />
 
 
-            <header className="mb-10 border-b pb-4" style={{ borderColor: "#7AAACE" }}>
-                <h1 className="text-4xl font-black tracking-tighter" style={{ color: "#355872" }}>
-                    MOTOPART
-                </h1>
-                <p style={{ color: "#7AAACE" }} className="text-sm">Sistem POS Penjualan Part Motor</p>
+
+            <header className="mb-6 border-b pb-4 flex justify-between items-end" style={{ borderColor: "#7AAACE" }}>
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter">MOTOPART</h1>
+                    <p className="text-sm opacity-70">Sistem POS Penjualan Part Motor</p>
+                </div>
+
+
+
+
+
+                <div className="w-1/3">
+                    <input
+                        type="text"
+                        placeholder="Cari part atau brand..."
+                        className="w-full p-2 rounded-lg border focus:ring-2 focus:ring-[#355872] outline-none"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
+
+
+
+
                 <div className="p-6 rounded-2xl shadow-xl" style={{ backgroundColor: "#9CD5FF" }}>
-                    <h2 className="text-xl font-bold mb-6 flex items-center">
-                        <span className="w-2 h-6 mr-3" style={{ backgroundColor: "#355872" }}></span>
-                        Katalog Part
-                    </h2>
-
-                    <div className="space-y-3">
-
-                        {products && products.length > 0 ? (
-                            products.map((product) => (
-                                <button
-                                    key={product.id}
-                                    onClick={() => addToCart(product)}
-                                    className="w-full p-4 rounded-xl text-left transition-all active:scale-95 flex justify-between shadow-sm hover:brightness-95"
-                                    style={{ backgroundColor: "#F7F8F0" }}
-                                >
-                                    <div>
-                                        <span className="block font-bold">{product.name}</span>
-                                        <span className="text-xs opacity-60">{product.brand}</span>
-                                    </div>
-                                    <span className="font-bold italic" style={{ color: "#355872" }}>
-                                        Rp {product.price.toLocaleString()}
-                                    </span>
-                                </button>
-                            ))
-                        ) : (
-                            <p className="text-sm italic">Stok barang kosong di database...</p>
-                        )}
+                    <h2 className="text-xl font-bold mb-4">Katalog Part</h2>
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        {filteredProducts.map((product) => (
+                            <button
+                                key={product.id}
+                                onClick={() => addToCart(product)}
+                                className="w-full p-4 rounded-xl text-left bg-[#F7F8F0] flex justify-between hover:scale-[1.02] transition-all"
+                            >
+                                <div>
+                                    <span className="block font-bold">{product.name}</span>
+                                    <span className="text-xs">Brand: {product.brand} | Stok: {product.stock}</span>
+                                </div>
+                                <span className="font-bold">Rp {product.price.toLocaleString()}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
 
 
+
+
+
+
+
+
                 <div className="p-6 rounded-2xl shadow-xl border" style={{ backgroundColor: "#7AAACE", borderColor: "#355872" }}>
-                    <h2 className="text-xl font-bold mb-6">Keranjang Belanja</h2>
-                    <div className="min-h-[200px] mb-6 pb-2" style={{ borderBottom: "1px solid #355872" }}>
-                        {cart.length === 0 ? (
-                            <p style={{ color: "#F7F8F0" }} className="italic">Belum ada barang...</p>
-                        ) : (
-                            cart.map((item, index) => (
-                                <div key={index} className="flex justify-between py-2" style={{ borderBottom: "1px solid #35587255" }}>
-                                    <span>{item.name}</span>
-                                    <span className="font-mono" style={{ color: "#F7F8F0" }}>
-                                        Rp {item.price.toLocaleString()}
-                                    </span>
-                                </div>
-                            ))
-                        )}
+                    <h2 className="text-xl font-bold mb-4">Pembayaran</h2>
+
+
+
+
+
+
+
+
+
+                    <div className="min-h-[150px] mb-4 overflow-y-auto">
+                        {cart.map((item, index) => (
+                            <div key={index} className="flex justify-between py-1 border-b border-[#35587233]">
+                                <span>{item.name}</span>
+                                <span>Rp {item.price.toLocaleString()}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="flex justify-between items-center mb-8">
-                        <span>Total Pembayaran:</span>
-                        <span className="text-3xl font-black" style={{ color: "#F7F8F0" }}>
-                            Rp {totalPrice.toLocaleString()}
-                        </span>
-                    </div>
 
-                    <button
-                        onClick={() => alert('Transaksi Berhasil Simpan!')}
-                        className="w-full font-black py-4 rounded-xl transition-all shadow-lg hover:brightness-110"
-                        style={{ backgroundColor: "#355872", color: "#F7F8F0" }}
-                    >
-                        BAYAR SEKARANG
-                    </button>
+
+
+
+
+
+
+                    <div className="space-y-4 pt-4 border-t border-[#355872]">
+                        <div className="flex justify-between text-xl font-bold">
+                            <span>Total</span>
+                            <span>Rp {totalPrice.toLocaleString()}</span>
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-bold uppercase">Uang Bayar (Rp)</label>
+                            <input
+                                type="number"
+                                className="w-full p-3 rounded-xl text-2xl font-mono text-right outline-none focus:ring-2 focus:ring-[#355872]"
+                                value={payAmount}
+                                onChange={(e) => setPayAmount(parseInt(e.target.value) || 0)}
+                            />
+                        </div>
+
+                        <div className="flex justify-between text-lg font-bold text-[#F7F8F0]">
+                            <span>Kembalian</span>
+                            <span>Rp {returnAmount < 0 ? 0 : returnAmount.toLocaleString()}</span>
+                        </div>
+
+                        <button
+                            onClick={handleBayar}
+                            className="w-full font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition-all text-white"
+                            style={{ backgroundColor: "#355872" }}
+                        >
+                            PROSES TRANSAKSI
+                        </button>
+                        <Link href="/sales" className="block text-center text-sm font-bold mt-2">Lihat Riwayat</Link>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+

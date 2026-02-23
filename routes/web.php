@@ -35,4 +35,18 @@ Route::get('/pos', function () {
 Route::get('/products' , [ProductController::class, 'index'])->name('products.index');
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 
+Route::get('/pos', function () {
+    return Inertia::render('POS/Index', [
+        'products' => \App\Models\Product::all()
+    ]);
+})->name('pos');
+
+// Trx Historiiii
+Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
+Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
+Route::resource('inventory', ProductController::class);
+
+
+
+
 require __DIR__.'/auth.php';
