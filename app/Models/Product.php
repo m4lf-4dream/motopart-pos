@@ -13,6 +13,11 @@ class Product extends Model
         'name',
         'brand',
         'price',
-        'stock'
+        'stock',
+        'image_putih',
+        'image_hitam',
+        'image_merah',
+        'image_biru',
+        'image_cyan',
     ];
 }
